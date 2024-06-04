@@ -1,0 +1,209 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: 7680bd912c20439db3df5ed8487dd308
+      name: Templates/initMax
+  templates:
+    - uuid: 9f94f179e7734333ad9e12acf1874f4d
+      template: 'Cisco QOS Monitoring'
+      name: 'Cisco QOS Monitoring'
+      groups:
+        - name: Templates/initMax
+      items:
+        - uuid: 4a3c59df55ed4ae5b4745c7099903059
+          name: 'QOS walk for Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.2.2,1.3.6.1.4.1.9.9.166.1.1.1.1.4,1.3.6.1.4.1.9.9.166.1.7.1.1.1,1.3.6.1.4.1.9.9.166.1.5.1.1.2]'
+          key: qos.walk
+          delay: 10m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#QOSNAME}'
+                - 1.3.6.1.4.1.9.9.166.1.7.1.1.1
+                - '0'
+                - '{#QOSINDEX}'
+                - 1.3.6.1.4.1.9.9.166.1.5.1.1.2
+                - '0'
+                - '{#IFINDEX}'
+                - 1.3.6.1.2.1.2.2.1.1
+                - '0'
+                - '{#QOSIFINDEX}'
+                - 1.3.6.1.4.1.9.9.166.1.1.1.1.4
+                - '0'
+                - '{#IFDESCR}'
+                - 1.3.6.1.2.1.2.2.1.2
+                - '0'
+        - uuid: 68d5b841da2f427f9666cf368f3e1b53
+          name: 'QOS walk for DATA'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.4.1.9.9.166.1.15.1.1]'
+          key: qos.walk.data
+          delay: 30s
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - cbQosCMPostPolicyByte64
+                - 1.3.6.1.4.1.9.9.166.1.15.1.1.10
+                - '0'
+                - cbQosCMPrePolicyByte64
+                - 1.3.6.1.4.1.9.9.166.1.15.1.1.6
+                - '0'
+                - cbQosCMDropByte64
+                - 1.3.6.1.4.1.9.9.166.1.15.1.1.17
+                - '0'
+                - cbQosCMFragmentByte64
+                - 1.3.6.1.4.1.9.9.166.1.15.1.1.27
+                - '0'
+            - type: STR_REPLACE
+              parameters:
+                - '{#SNMPINDEX}'
+                - OIDindex
+      discovery_rules:
+        - uuid: 2cc429ee66854531b228a8f9da98f8ad
+          name: 'QOS discovery'
+          type: DEPENDENT
+          key: qos.discovery
+          delay: '0'
+          lifetime: '0'
+          item_prototypes:
+            - uuid: c2853ce907dd443caaaddb60ae48af96
+              name: '{#IFDESCR} - {#QOSNAME}: cbQosCMDropByte64'
+              type: DEPENDENT
+              key: 'walk.cbQosCMDropByte64[{#SNMPINDEX}]'
+              delay: '0'
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.OIDindex==''{#SNMPINDEX}'')].cbQosCMDropByte64.first()'
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: qos.walk.data
+              tags:
+                - tag: component
+                  value: qos
+                - tag: qosindex
+                  value: '{#SNMPINDEX}'
+            - uuid: dd8631d6b17e4a99b0e5229a20c1baa1
+              name: '{#IFDESCR} - {#QOSNAME}: cbQosCMFragmentByte64'
+              type: DEPENDENT
+              key: 'walk.cbQosCMFragmentByte64[{#SNMPINDEX}]'
+              delay: '0'
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.OIDindex==''{#SNMPINDEX}'')].cbQosCMFragmentByte64.first()'
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: qos.walk.data
+              tags:
+                - tag: component
+                  value: qos
+                - tag: qosindex
+                  value: '{#SNMPINDEX}'
+            - uuid: ed7dec7218a1464ead550fa32d5e25b9
+              name: '{#IFDESCR} - {#QOSNAME}: cbQosCMPostPolicyByte64'
+              type: DEPENDENT
+              key: 'walk.cbQosCMPostPolicyByte64[{#SNMPINDEX}]'
+              delay: '0'
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.OIDindex==''{#SNMPINDEX}'')].cbQosCMPostPolicyByte64.first()'
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: qos.walk.data
+              tags:
+                - tag: component
+                  value: qos
+                - tag: qosindex
+                  value: '{#SNMPINDEX}'
+            - uuid: 76c1d4652c0943acac59010d42005146
+              name: '{#IFDESCR} - {#QOSNAME}: cbQosCMPrePolicyByte64'
+              type: DEPENDENT
+              key: 'walk.cbQosCMPrePolicyByte64[{#SNMPINDEX}]'
+              delay: '0'
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.OIDindex==''{#SNMPINDEX}'')].cbQosCMPrePolicyByte64.first()'
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: qos.walk.data
+              tags:
+                - tag: component
+                  value: qos
+                - tag: qosindex
+                  value: '{#SNMPINDEX}'
+          master_item:
+            key: qos.walk
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var logLevel = 3,
+                      logPrefix = "[qos]: ";
+                  arr = JSON.parse(value);
+                  qos = [];
+                  qosIf = [];
+                  
+                  for (x in arr) {
+                      if (arr[x]['{#QOSIFINDEX}']) {
+                                  
+                          index = arr.map(function (e) { return e['{#IFINDEX}']; }).indexOf(arr[x]['{#QOSIFINDEX}']);
+                          //Zabbix.log(logLevel, logPrefix + index + ' : ' + arr[index]['{#IFDESCR}']);
+                          arr[x]['{#IFDESCR}']=arr[index]['{#IFDESCR}'];
+                          qosIf.push(arr[x]);
+                  
+                      } 
+                  }
+                  
+                  //Zabbix.log(logLevel, logPrefix +' : ' + JSON.stringify(qosIf));
+                  
+                  for (x in arr) {
+                      if (arr[x]['{#QOSINDEX}']) {
+                          ifindex = arr.map(function (e) { return e['{#SNMPINDEX}']; }).indexOf(arr[x]['{#QOSINDEX}'])
+                          if (ifindex >0) {
+                              arr[x]['{#QOSNAME}']=arr[ifindex]['{#QOSNAME}'];
+                              qosifindex = (arr[x]['{#SNMPINDEX}']).split(".")[0];
+                              arr[x]['{#IFDESCR}']=qosIf[qosIf.map(function (e) { return e['{#SNMPINDEX}']; }).indexOf(qosifindex)]['{#IFDESCR}'];
+                  //            Zabbix.log(logLevel, logPrefix + arr[x]['{#SNMPINDEX}'] + ":" + ifindex + ' : ' + JSON.stringify(arr[ifindex]));
+                  //            Zabbix.log(logLevel, logPrefix + "qosifindex:" + qosifindex );
+                              qos.push(arr[x]);
+                              
+                          }
+                  
+                      } 
+                  }
+                  return JSON.stringify(qos);
+                  
