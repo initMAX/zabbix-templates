@@ -1,0 +1,11 @@
+description: |
+        "Short description"
+ 
+        More of our templates can be found on
+        https://git.initmax.cz/initMAX-Public/zabbix-templates
+
+        Developed by initMAX s.r.o.
+        https://www.initmax.com
+vendor:
+        name: initMAX
+        version: 7.0-0
